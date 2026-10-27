@@ -1,0 +1,83 @@
+# FixMate Root GitIgnore
+
+# Node & Package Managers
+node_modules/
+*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment and Local Configurations (Keep secrets private!)
+.env
+.env.*
+*.env
+!.env.example
+!*/.env.example
+
+# Production & Build Outputs
+dist/
+dist-ssr/
+build/
+out/
+*/dist/
+*/build/
+
+# Logs & Debugging
+logs/
+*.log
+*/logs/
+dev.log
+server/dev.log
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# IDEs and Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.claude/
+
+# Temporary / Caches
+.cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.turbo/
+
+# Python (Doc generation scripts & local environments)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.pytest_cache/
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+
+# Certificates, Keys & Credentials
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12

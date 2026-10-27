@@ -1,0 +1,163 @@
+@startuml FixMate_Class_Diagram
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam roundcorner 6
+
+abstract class "User (Abstract)" as User {
+  + id : String
+  + name : String
+  + phone : String
+  + email : String
+  - passwordHash : String
+  + role : String
+  + avatarUrl : String
+  + isActive : Boolean
+  + createdAt : DateTime
+  --
+  + login(identifier, password) : Token
+  + register(userData) : User
+  + updateProfile(profileData) : Boolean
+  + logout() : void
+}
+
+class Admin {
+  + permissions : List<String>
+  --
+  + verifyWorker(workerId, status) : Boolean
+  + manageWorkersCRUD() : void
+  + manageCustomersCRUD() : void
+  + manageCategoriesCRUD() : void
+  + updatePricingConfig(config) : Boolean
+  + getPlatformKPIs() : KPIStats
+}
+
+class Worker {
+  + isVerified : Boolean
+  + isAvailable : Boolean
+  + serviceRadiusM : Integer
+  + perKmRate : Float
+  + visitCharge : Float
+  + ratingAvg : Float
+  + ratingCount : Integer
+  + bio : String
+  --
+  + setupProfile(skills, rates, location) : Boolean
+  + toggleAvailability() : Boolean
+  + acceptBooking(bookingId) : Boolean
+  + rejectBooking(bookingId) : Boolean
+  + markInProgress(bookingId) : Boolean
+  + submitFinalPrice(bookingId, amount) : Boolean
+}
+
+class Customer {
+  + savedAddressCount : Integer
+  --
+  + searchWorkers(lat, lng, categoryId, radius) : List<Worker>
+  + requestEstimate(workerId, category, urgency) : EstimateRange
+  + createBooking(bookingData) : Booking
+  + confirmBill(bookingId) : Boolean
+  + submitReview(bookingId, rating, comment) : Review
+}
+
+class Category {
+  + id : String
+  + name : String
+  + slug : String
+  + icon : String
+  + baseRate : Float
+  + isActive : Boolean
+  --
+  + getActiveCategories() : List<Category>
+  + calculateBasePrice() : Float
+}
+
+class WorkerSkill {
+  + id : String
+  + workerId : String
+  + categoryId : String
+  + baseRate : Float
+  + rateUnit : String
+  --
+  + updateSkillRate(newRate) : void
+}
+
+class Booking {
+  + id : String
+  + code : String
+  + customerId : String
+  + workerId : String
+  + categoryId : String
+  + problemText : String
+  + urgency : String
+  + scheduledAt : DateTime
+  + estimateMin : Float
+  + estimateMax : Float
+  + finalPrice : Float
+  + status : String
+  + customerPhone : String
+  + workerPhone : String
+  --
+  + transitionStatus(newStatus) : Boolean
+  + revealContacts() : void
+  + generateWhatsAppLink() : String
+}
+
+class "Address <<ValueObject>>" as Address {
+  + line : String
+  + area : String
+  + city : String
+  + pincode : String
+  + coordinates : GeoPoint
+  --
+  + reverseGeocode(lat, lng) : Address
+  + validateAddress() : Boolean
+}
+
+class Review {
+  + id : String
+  + bookingId : String
+  + customerId : String
+  + workerId : String
+  + rating : Integer
+  + tags : List<String>
+  + comment : String
+  + createdAt : DateTime
+  --
+  + submitReview() : Review
+  + updateWorkerRatingAgg() : void
+}
+
+class PricingConfig {
+  + id : String
+  + defaultPerKmRate : Float
+  + freeDistanceM : Integer
+  + urgencyFee : Float
+  + nightMultiplier : Float
+  + nightStartHour : Integer
+  + estimateSpreadPct : Float
+  --
+  + computeEstimate(worker, category, dist, urgency) : EstimateRange
+  + updateParameters(newConfig) : Boolean
+}
+
+' Inheritance
+User <|-- Admin : Extends
+User <|-- Worker : Extends
+User <|-- Customer : Extends
+
+' Associations & Multiplicities
+Admin "1" --> "0..*" Category : Manages
+Admin "1" --> "1" PricingConfig : Tunes
+Worker "1" --> "1..*" WorkerSkill : Offers
+Category "1" --> "0..*" WorkerSkill : Defines
+Customer "1" --> "0..*" Booking : Creates
+Worker "1" --> "0..*" Booking : Executes
+Category "1" --> "0..*" Booking : Categorizes
+Booking "1" *-- "1" Address : Contains
+Booking "1" --> "0..1" Review : Generates
+Customer "1" --> "0..*" Review : Submits
+Worker "1" --> "0..*" Review : Receives
+PricingConfig "1" ..> "0..*" Booking : Estimates
+
+@enduml

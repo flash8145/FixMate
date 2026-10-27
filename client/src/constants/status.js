@@ -1,0 +1,51 @@
+export const STATUS_CONFIG = {
+  PENDING: {
+    label: 'Pending',
+    dot: 'bg-amber-400',
+    bg: 'bg-amber-50',
+    border: 'border-amber-200/80',
+    text: 'text-amber-800',
+  },
+  ACCEPTED: {
+    label: 'Accepted',
+    dot: 'bg-blue-500',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200/80',
+    text: 'text-blue-800',
+  },
+  IN_PROGRESS: {
+    label: 'In Progress',
+    dot: 'bg-indigo-500',
+    bg: 'bg-indigo-50',
+    border: 'border-indigo-200/80',
+    text: 'text-indigo-800',
+  },
+  PRICE_SET: {
+    label: 'Price Set',
+    dot: 'bg-purple-500',
+    bg: 'bg-purple-50',
+    border: 'border-purple-200/80',
+    text: 'text-purple-800',
+  },
+  COMPLETED: {
+    label: 'Completed',
+    dot: 'bg-emerald-500',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200/80',
+    text: 'text-emerald-800',
+  },
+  REJECTED: {
+    label: 'Rejected',
+    dot: 'bg-rose-500',
+    bg: 'bg-rose-50',
+    border: 'border-rose-200/80',
+    text: 'text-rose-800',
+  },
+  CANCELLED: {
+    label: 'Cancelled',
+    dot: 'bg-slate-400',
+    bg: 'bg-slate-100',
+    border: 'border-slate-200',
+    text: 'text-slate-700',
+  },
+}

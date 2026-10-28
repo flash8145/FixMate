@@ -13,7 +13,6 @@ import {
   Briefcase,
   ChevronLeft,
   ChevronRight,
-  MessageCircle,
   AlertCircle,
   Maximize2,
 } from 'lucide-react'
@@ -132,13 +131,13 @@ export default function WorkerDetailPanel({
             className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full"
           >
             {/* Image-First Hero Banner */}
-            <div className="relative h-60 w-full bg-slate-900 overflow-hidden shrink-0">
+            <div className="relative h-64 sm:h-72 w-full bg-slate-900 overflow-hidden shrink-0">
               <img
                 src={gallery[activeImageIndex] || gallery[0]}
                 alt={worker?.userId?.name || 'Worker'}
-                className="h-full w-full object-cover transition-all duration-300"
+                className="h-full w-full object-cover object-top sm:object-[center_15%] transition-all duration-300"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-black/25" />
 
               {/* Top Navigation Controls */}
               <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10">
@@ -502,20 +501,12 @@ export default function WorkerDetailPanel({
 
             {/* Sticky Bottom Actions Bar */}
             {!loading && worker && (
-              <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 backdrop-blur-md p-4 flex items-center gap-3 shadow-lg">
-                <button
-                  type="button"
-                  title="WhatsApp unlocked after booking acceptance"
-                  className="flex items-center justify-center h-12 w-12 rounded-2xl border border-slate-300 text-emerald-600 hover:bg-emerald-50 transition-colors shrink-0"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                </button>
-
+              <div className="sticky bottom-0 border-t border-slate-200 bg-white/95 backdrop-blur-md p-3.5 flex items-center justify-center shadow-lg">
                 <button
                   onClick={() => onBook(worker)}
                   disabled={!worker.isAvailable}
                   type="button"
-                  className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 py-3.5 text-center text-sm font-bold text-white shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-orange-700 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="w-full max-w-sm flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 py-2.5 px-6 text-center text-xs sm:text-sm font-bold text-white shadow-md shadow-orange-500/25 hover:from-orange-600 hover:to-orange-700 disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   <span>
                     {worker.isAvailable ? 'Book This Worker' : 'Currently Offline'}

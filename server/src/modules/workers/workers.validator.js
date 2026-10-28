@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 export const profileSchema = z.object({
   bio: z.string().max(1000).optional(),
+  upiId: z.string().trim().max(100).optional().or(z.literal('')),
   experienceYrs: z.coerce.number().min(0).max(60),
   skills: z
     .array(

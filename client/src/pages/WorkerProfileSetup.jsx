@@ -72,6 +72,7 @@ export default function WorkerProfileSetup() {
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [form, setForm] = useState({
     bio: '',
+    upiId: '',
     experienceYrs: '',
     skills: [emptySkill],
     visitCharge: '',
@@ -111,6 +112,7 @@ export default function WorkerProfileSetup() {
           if (p) {
             setForm({
               bio: p.bio || '',
+              upiId: p.upiId || '',
               experienceYrs: p.experienceYrs || '',
               skills:
                 p.skills && p.skills.length
@@ -261,6 +263,7 @@ export default function WorkerProfileSetup() {
     try {
       const payload = {
         bio: form.bio || '',
+        upiId: (form.upiId || '').trim(),
         experienceYrs: Number(form.experienceYrs) || 0,
         visitCharge: Number(form.visitCharge) || 0,
         perKmRate: Number(form.perKmRate) || 0,
@@ -525,6 +528,39 @@ export default function WorkerProfileSetup() {
                 className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-orange-500 focus:bg-white"
               />
             </div>
+          </div>
+        </div>
+
+        {/* Direct UPI Payment Setup */}
+        <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-600 font-black text-sm">
+              ₹
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-slate-900 tracking-tight">
+                Direct UPI Payment Setup
+              </h2>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Customers scan your QR code or jump straight to GPay/PhonePe to pay your final bill directly to your account.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Your UPI ID (VPA)
+            </label>
+            <input
+              type="text"
+              value={form.upiId || ''}
+              onChange={updateField('upiId')}
+              placeholder="e.g. 9820055555@upi or yourname@okhdfcbank"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 px-3.5 py-2.5 text-sm font-bold text-slate-900 outline-none focus:border-orange-500 focus:bg-white"
+            />
+            <p className="text-[10px] text-slate-400 mt-1">
+              If left blank, customers will default to paying to your registered mobile number ({user?.phone ? user.phone : 'mobile number'}).
+            </p>
           </div>
         </div>
 

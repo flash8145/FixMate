@@ -36,6 +36,8 @@ function sanitizeBooking(doc, actorRole) {
     delete b.workerPhone
     delete b.customerPhone
     delete b.whatsAppUrl
+    delete b.workerUpiId
+    delete b.upiUrl
   } else {
     const rawWorkerPhone = workerUser?.phone || b.workerPhone
     const rawCustomerPhone = customer?.phone || b.customerPhone
@@ -45,6 +47,24 @@ function sanitizeBooking(doc, actorRole) {
     }
     if (rawCustomerPhone) {
       b.customerPhone = rawCustomerPhone
+    }
+
+    // Attach UPI Payee ID & standard NPCI deep link
+    // If worker upiId is blank, fallback to raw 10-digit mobile number without '@upi'
+    const workerUpi =
+      b.workerId?.upiId ||
+      (rawWorkerPhone ? rawWorkerPhone.replace(/\D/g, '').slice(-10) : '')
+    if (workerUpi) {
+      b.workerUpiId = workerUpi
+    }
+
+    const payAmount = b.final?.amount || b.estimate?.min || 0
+    if (workerUpi && payAmount > 0) {
+      const payeeName = workerUser?.name || 'FixMate Partner'
+      const note = `FixMate #${b.code} Payment`
+      b.upiUrl = `upi://pay?pa=${encodeURIComponent(workerUpi)}&pn=${encodeURIComponent(
+        payeeName,
+      )}&am=${payAmount}&cu=INR&tn=${encodeURIComponent(note)}`
     }
 
     // Generate WhatsApp deep link for the requesting actor
@@ -276,7 +296,7 @@ export async function setFinalPrice(bookingId, amount, actor) {
   return getBookingById(bookingId, actor)
 }
 
-export async function confirmFinalPrice(bookingId, actor) {
+export async function confirmFinalPrice(bookingId, actor, paymentMethod = 'UPI') {
   const booking = await Booking.findById(bookingId).populate('workerId', 'userId')
   if (!booking) {
     throw new AppError('BOOKING_NOT_FOUND', 'Booking not found', 404)
@@ -286,6 +306,7 @@ export async function confirmFinalPrice(bookingId, actor) {
   transition(booking, 'COMPLETED', actor, workerUserId)
 
   booking.final.confirmedAt = new Date()
+  booking.final.paymentMethod = paymentMethod
   await booking.save()
 
   // Atomically increment worker's completed jobs counter

@@ -197,7 +197,7 @@ export default function CustomerProfile() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         {/* Profile Card & Avatar */}
         <div className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-xs space-y-6">
           <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
@@ -231,7 +231,6 @@ export default function CustomerProfile() {
                 </label>
                 <input
                   type="text"
-                  required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Your full name"

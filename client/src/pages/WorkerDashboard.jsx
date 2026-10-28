@@ -529,14 +529,31 @@ export default function WorkerDashboard() {
 
                       {/* Final Price details if set */}
                       {b.final?.amount && (
-                        <div className="rounded-2xl bg-purple-50/80 border border-purple-200 p-3.5 text-xs text-purple-900 flex justify-between items-center">
-                          <span>
-                            Submitted Final Bill: <strong className="text-sm">₹{b.final.amount}</strong>
-                          </span>
-                          <span className="text-purple-700 font-semibold text-[11px]">
-                            {b.status === 'COMPLETED'
-                              ? '✓ Confirmed by Customer'
-                              : 'Waiting for customer confirmation'}
+                        <div className="rounded-2xl bg-orange-50/80 border border-orange-200 p-3.5 text-xs text-orange-950 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <span>
+                              Submitted Final Bill: <strong className="text-sm font-extrabold text-slate-900">₹{b.final.amount}</strong>
+                            </span>
+                            {b.status === 'COMPLETED' && (
+                              <span className="rounded-xl px-2.5 py-0.5 text-[11px] font-bold border border-orange-200 bg-white shadow-2xs text-slate-800">
+                                {b.final?.paymentMethod === 'CASH' ? (
+                                  <span className="text-emerald-700 font-bold">Paid in: 💵 Cash</span>
+                                ) : (
+                                  <span className="text-orange-700 font-bold">Paid via: ⚡ Online UPI</span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <span className="font-semibold text-xs">
+                            {b.status === 'COMPLETED' ? (
+                              <span className="text-emerald-700 font-bold flex items-center gap-1">
+                                ✓ Paid & Confirmed by Customer
+                              </span>
+                            ) : (
+                              <span className="text-orange-700">
+                                ⏳ Waiting for customer payment confirmation
+                              </span>
+                            )}
                           </span>
                         </div>
                       )}
@@ -648,7 +665,7 @@ export default function WorkerDashboard() {
               <p className="text-xs text-rose-600 font-semibold">{finalPriceError}</p>
             )}
 
-            <form onSubmit={handleFinalPriceSubmit} className="space-y-4">
+            <form onSubmit={handleFinalPriceSubmit} noValidate className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                   Final Amount (₹)
@@ -660,10 +677,12 @@ export default function WorkerDashboard() {
                   <input
                     type="number"
                     min="1"
-                    required
                     autoFocus
                     value={finalPriceInput}
-                    onChange={(e) => setFinalPriceInput(e.target.value)}
+                    onChange={(e) => {
+                      setFinalPriceInput(e.target.value)
+                      if (finalPriceError) setFinalPriceError('')
+                    }}
                     className="w-full rounded-2xl border border-slate-200 py-3 pl-8 pr-4 text-xl font-black text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
                   />
                 </div>

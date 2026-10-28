@@ -4,6 +4,7 @@ const workerProfileSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     bio: { type: String, default: '' },
+    upiId: { type: String, trim: true, default: '' },
     experienceYrs: { type: Number, default: 0 },
     skills: [
       {

@@ -215,6 +215,7 @@ async function seed() {
       {
         userId: user._id,
         bio: w.bio,
+        upiId: w.upiId || `${w.phone}@upi`,
         experienceYrs: w.experienceYrs,
         skills: [
           {

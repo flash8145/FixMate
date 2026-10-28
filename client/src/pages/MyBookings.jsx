@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { api } from '../services/api.js'
 import { useAuthStore } from '../store/authStore.js'
 import ReviewModal from '../features/reviews/ReviewModal.jsx'
+import UpiPaymentCard from '../features/payment/UpiPaymentCard.jsx'
 import { getServiceImage } from '../config/images.js'
 import { pageVariants } from '../utils/motion.js'
 import {
@@ -113,10 +114,10 @@ export default function MyBookings() {
     }
   }
 
-  const handleConfirmPrice = async (bookingId) => {
+  const handleConfirmPrice = async (bookingId, paymentMethod = 'UPI') => {
     setActionLoading((prev) => ({ ...prev, [bookingId]: true }))
     try {
-      await api.patch(`/bookings/${bookingId}/confirm`)
+      await api.patch(`/bookings/${bookingId}/confirm`, { paymentMethod })
       fetchBookings()
     } catch (err) {
       alert(err.response?.data?.error?.message || 'Could not confirm final price')
@@ -506,31 +507,13 @@ export default function MyBookings() {
                     </div>
                   ) : null}
 
-                  {/* Price confirmation box when status is PRICE_SET */}
+                  {/* Dynamic UPI Payment Card & QR Code when status is PRICE_SET */}
                   {b.status === 'PRICE_SET' && (
-                    <div className="rounded-2xl border border-purple-200 bg-purple-50/80 p-4 space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-bold text-purple-950 uppercase tracking-wider">
-                            Final Bill Submitted by Technician
-                          </p>
-                          <p className="mt-1 text-2xl font-black text-slate-900">
-                            ₹{b.final?.amount}
-                          </p>
-                          <p className="text-xs text-slate-500 mt-1">
-                            Settled offline in cash or UPI. Confirm below once payment is completed.
-                          </p>
-                        </div>
-
-                        <button
-                          onClick={() => handleConfirmPrice(b._id)}
-                          disabled={actionLoading[b._id]}
-                          className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20 cursor-pointer shrink-0"
-                        >
-                          {actionLoading[b._id] ? 'Confirming…' : '✓ Confirm & Complete'}
-                        </button>
-                      </div>
-                    </div>
+                    <UpiPaymentCard
+                      booking={b}
+                      onConfirmPayment={handleConfirmPrice}
+                      isConfirming={Boolean(actionLoading[b._id])}
+                    />
                   )}
 
                   {/* Completed message & Review CTA */}
@@ -538,7 +521,12 @@ export default function MyBookings() {
                     <div className="rounded-2xl bg-emerald-50/80 border border-emerald-200 p-3.5 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2 text-xs text-emerald-900 font-semibold">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Job completed and final bill (₹{b.final?.amount}) confirmed.</span>
+                        <span>
+                          Job completed and final bill (₹{b.final?.amount}) paid via{' '}
+                          <strong className="underline underline-offset-2">
+                            {b.final?.paymentMethod === 'CASH' ? 'Cash' : 'Online UPI'}
+                          </strong>.
+                        </span>
                       </div>
 
                       <button

@@ -624,7 +624,6 @@ export default function BookingModal({
                           </label>
                           <input
                             type="datetime-local"
-                            required
                             value={scheduledAt}
                             onChange={(e) => setScheduledAt(e.target.value)}
                             className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-orange-500"
@@ -637,7 +636,6 @@ export default function BookingModal({
                           </label>
                           <input
                             type="text"
-                            required
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
                             className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-800 outline-none focus:border-orange-500"
@@ -705,7 +703,6 @@ export default function BookingModal({
                           </div>
                           <input
                             type="text"
-                            required
                             value={addressLine}
                             onChange={(e) => setAddressLine(e.target.value)}
                             placeholder="e.g. Flat 301, Sunshine Heights, Main Road"

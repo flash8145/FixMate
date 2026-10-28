@@ -36,7 +36,8 @@ export default function AiAssistantWidget() {
   const { getCurrentPosition } = useGeoLocation()
 
   const isOpen = useAiStore((s) => s.isOpen)
-  const setIsOpen = (val) => (val ? useAiStore.getState().open() : useAiStore.getState().close())
+  const toggleChat = () => useAiStore.getState().toggle()
+  const closeChat = () => useAiStore.getState().close()
   const initialPrompt = useAiStore((s) => s.initialPrompt)
   const clearInitialPrompt = useAiStore((s) => s.clearInitialPrompt)
   const pinnedLocation = useAiStore((s) => s.pinnedLocation)
@@ -369,35 +370,80 @@ export default function AiAssistantWidget() {
       {/* Floating Launcher Button */}
       <div className="fixed bottom-6 right-6 z-[1450]">
         <motion.button
-          onClick={() => setIsOpen((prev) => !prev)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          onClick={toggleChat}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.94 }}
+          animate={{
+            rotate: isOpen ? 180 : 0,
+          }}
+          transition={{ type: 'spring', damping: 20, stiffness: 260 }}
           className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-orange-600 via-amber-500 to-orange-500 text-white shadow-xl shadow-orange-500/30 transition-shadow hover:shadow-orange-500/50 cursor-pointer"
-          aria-label="Open FixMate AI Assistant"
+          aria-label={isOpen ? 'Close FixMate AI Assistant' : 'Open FixMate AI Assistant'}
         >
-          {isOpen ? (
-            <X className="h-6 w-6 text-white" />
-          ) : (
-            <>
-              <Sparkles className="h-6 w-6 text-white" />
-              {/* Pulse notification badge */}
-              <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
-              </span>
-            </>
-          )}
+          <AnimatePresence mode="wait" initial={false}>
+            {isOpen ? (
+              <motion.div
+                key="close-icon"
+                initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
+                animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                exit={{ rotate: 90, scale: 0.4, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              >
+                <X className="h-6 w-6 text-white" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="sparkle-icon"
+                initial={{ rotate: 90, scale: 0.4, opacity: 0 }}
+                animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                exit={{ rotate: -90, scale: 0.4, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              >
+                <Sparkles className="h-6 w-6 text-white" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.button>
       </div>
 
-      {/* Slide-Up Chat Window - Constrained below NavBar */}
+      {/* Morphing Chat Window - Constrained below NavBar */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 25, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 25, scale: 0.96 }}
-            transition={{ duration: 0.2 }}
+            initial={{
+              opacity: 0,
+              scale: 0.15,
+              y: 40,
+              x: 8,
+              borderRadius: '44px',
+              filter: 'blur(3px)',
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              x: 0,
+              borderRadius: '24px',
+              filter: 'blur(0px)',
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.15,
+              y: 40,
+              x: 8,
+              borderRadius: '44px',
+              filter: 'blur(3px)',
+              transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
+            }}
+            transition={{
+              type: 'spring',
+              damping: 24,
+              stiffness: 280,
+              mass: 0.8,
+            }}
+            style={{
+              transformOrigin: 'calc(100% - 28px) calc(100% + 36px)',
+            }}
             className="fixed bottom-22 right-4 sm:right-6 z-[1400] flex h-[530px] max-h-[calc(100vh-170px)] w-[calc(100vw-32px)] sm:w-[410px] flex-col overflow-hidden rounded-3xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/20 backdrop-blur-md"
           >
             {/* Header */}
@@ -428,7 +474,7 @@ export default function AiAssistantWidget() {
                   </button>
                 )}
                 <button
-                  onClick={() => setIsOpen(false)}
+                  onClick={closeChat}
                   title="Close Assistant"
                   className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
                 >
@@ -705,7 +751,7 @@ export default function AiAssistantWidget() {
                           </p>
                           <button
                             onClick={() => {
-                              setIsOpen(false)
+                              closeChat()
                               navigate('/my-bookings')
                             }}
                             className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors cursor-pointer"

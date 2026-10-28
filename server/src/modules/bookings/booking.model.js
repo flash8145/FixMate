@@ -68,6 +68,7 @@ const bookingSchema = new mongoose.Schema(
       amount: { type: Number },
       setBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       confirmedAt: { type: Date },
+      paymentMethod: { type: String, enum: ['UPI', 'CASH'], default: 'UPI' },
     },
     status: {
       type: String,

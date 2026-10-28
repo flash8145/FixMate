@@ -93,6 +93,12 @@ export default function AdminPanel() {
     isActive: true,
   })
 
+  // React validation error states (replacing native HTML5 validation bubbles)
+  const [workerErrors, setWorkerErrors] = useState({})
+  const [customerErrors, setCustomerErrors] = useState({})
+  const [categoryErrors, setCategoryErrors] = useState({})
+  const [configErrors, setConfigErrors] = useState({})
+
   const [loading, setLoading] = useState(true)
   const [savingConfig, setSavingConfig] = useState(false)
   const [configSuccess, setConfigSuccess] = useState(false)
@@ -155,6 +161,7 @@ export default function AdminPanel() {
   }
 
   const openWorkerModal = (mode, worker = null) => {
+    setWorkerErrors({})
     if (mode === 'edit' && worker) {
       const firstSkill = worker.skills?.[0]
       setWorkerForm({
@@ -199,8 +206,50 @@ export default function AdminPanel() {
     }
   }
 
+  const validateWorkerForm = () => {
+    const errs = {}
+    if (!workerForm.name || !workerForm.name.trim()) {
+      errs.name = 'Full name is required'
+    } else if (workerForm.name.trim().length < 2) {
+      errs.name = 'Name must be at least 2 characters'
+    }
+
+    const cleanPhone = (workerForm.phone || '').trim()
+    if (!cleanPhone) {
+      errs.phone = 'Phone number is required'
+    } else if (!/^[0-9]{10}$/.test(cleanPhone)) {
+      errs.phone = 'Phone must be exactly 10 digits'
+    }
+
+    if (workerForm.email && workerForm.email.trim()) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(workerForm.email.trim())) {
+        errs.email = 'Enter a valid email address'
+      }
+    }
+
+    if (workerModal?.mode === 'create') {
+      if (!workerForm.password) {
+        errs.password = 'Password is required'
+      } else if (workerForm.password.length < 6) {
+        errs.password = 'Password must be at least 6 characters'
+      }
+    }
+
+    if (!workerForm.city || !workerForm.city.trim()) {
+      errs.city = 'City is required'
+    }
+
+    return errs
+  }
+
   const handleWorkerSubmit = async (e) => {
     e.preventDefault()
+    const errs = validateWorkerForm()
+    if (Object.keys(errs).length > 0) {
+      setWorkerErrors(errs)
+      return
+    }
+    setWorkerErrors({})
     try {
       const payload = {
         name: workerForm.name,
@@ -243,6 +292,7 @@ export default function AdminPanel() {
 
   // Customer Actions
   const openCustomerModal = (mode, customer = null) => {
+    setCustomerErrors({})
     if (mode === 'edit' && customer) {
       setCustomerForm({
         name: customer.name || '',
@@ -272,8 +322,46 @@ export default function AdminPanel() {
     }
   }
 
+  const validateCustomerForm = () => {
+    const errs = {}
+    if (!customerForm.name || !customerForm.name.trim()) {
+      errs.name = 'Full name is required'
+    } else if (customerForm.name.trim().length < 2) {
+      errs.name = 'Name must be at least 2 characters'
+    }
+
+    const cleanPhone = (customerForm.phone || '').trim()
+    if (!cleanPhone) {
+      errs.phone = 'Phone number is required'
+    } else if (!/^[0-9]{10}$/.test(cleanPhone)) {
+      errs.phone = 'Phone must be exactly 10 digits'
+    }
+
+    if (customerForm.email && customerForm.email.trim()) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerForm.email.trim())) {
+        errs.email = 'Enter a valid email address'
+      }
+    }
+
+    if (customerModal?.mode === 'create') {
+      if (!customerForm.password) {
+        errs.password = 'Password is required'
+      } else if (customerForm.password.length < 6) {
+        errs.password = 'Password must be at least 6 characters'
+      }
+    }
+
+    return errs
+  }
+
   const handleCustomerSubmit = async (e) => {
     e.preventDefault()
+    const errs = validateCustomerForm()
+    if (Object.keys(errs).length > 0) {
+      setCustomerErrors(errs)
+      return
+    }
+    setCustomerErrors({})
     try {
       const payload = {
         name: customerForm.name,
@@ -330,6 +418,7 @@ export default function AdminPanel() {
 
   // Category Actions
   const openCategoryModal = (mode, cat = null) => {
+    setCategoryErrors({})
     if (mode === 'edit' && cat) {
       setCategoryForm({ name: cat.name, slug: cat.slug, icon: cat.icon || '🛠️', isActive: cat.isActive })
       setCategoryModal({ mode: 'edit', id: cat._id })
@@ -341,6 +430,18 @@ export default function AdminPanel() {
 
   const handleCategorySubmit = async (e) => {
     e.preventDefault()
+    const errs = {}
+    if (!categoryForm.name || !categoryForm.name.trim()) {
+      errs.name = 'Category name is required'
+    }
+    if (!categoryForm.icon || !categoryForm.icon.trim()) {
+      errs.icon = 'Category icon emoji is required'
+    }
+    if (Object.keys(errs).length > 0) {
+      setCategoryErrors(errs)
+      return
+    }
+    setCategoryErrors({})
     try {
       if (categoryModal.mode === 'create') {
         await api.post('/admin/categories', categoryForm)
@@ -367,6 +468,28 @@ export default function AdminPanel() {
   // Pricing Config Actions
   const handleConfigSubmit = async (e) => {
     e.preventDefault()
+    const errs = {}
+    if (pricingConfig.urgencyFee === '' || Number(pricingConfig.urgencyFee) < 0) {
+      errs.urgencyFee = 'Urgency fee must be 0 or greater'
+    }
+    if (pricingConfig.nightMultiplier === '' || Number(pricingConfig.nightMultiplier) < 1) {
+      errs.nightMultiplier = 'Night multiplier must be at least 1.0'
+    }
+    if (
+      pricingConfig.nightStartHour === '' ||
+      Number(pricingConfig.nightStartHour) < 0 ||
+      Number(pricingConfig.nightStartHour) > 23
+    ) {
+      errs.nightStartHour = 'Night start hour must be between 0 and 23'
+    }
+    if (pricingConfig.estimateSpreadPct === '' || Number(pricingConfig.estimateSpreadPct) < 0) {
+      errs.estimateSpreadPct = 'Estimate spread must be 0 or greater'
+    }
+    if (Object.keys(errs).length > 0) {
+      setConfigErrors(errs)
+      return
+    }
+    setConfigErrors({})
     setSavingConfig(true)
     setConfigSuccess(false)
     try {
@@ -1253,7 +1376,7 @@ export default function AdminPanel() {
                 </div>
               )}
 
-              <form onSubmit={handleConfigSubmit} className="space-y-5">
+              <form onSubmit={handleConfigSubmit} noValidate className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
@@ -1262,9 +1385,11 @@ export default function AdminPanel() {
                     <input
                       type="number"
                       step="any"
-                      required
                       value={pricingConfig.perKmRate}
-                      onChange={(e) => setPricingConfig({ ...pricingConfig, perKmRate: e.target.value })}
+                      onChange={(e) => {
+                        setPricingConfig({ ...pricingConfig, perKmRate: e.target.value })
+                        if (configErrors.perKmRate) setConfigErrors({ ...configErrors, perKmRate: null })
+                      }}
                       className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-orange-500"
                     />
                   </div>
@@ -1275,9 +1400,11 @@ export default function AdminPanel() {
                     </label>
                     <input
                       type="number"
-                      required
                       value={pricingConfig.freeDistanceM}
-                      onChange={(e) => setPricingConfig({ ...pricingConfig, freeDistanceM: e.target.value })}
+                      onChange={(e) => {
+                        setPricingConfig({ ...pricingConfig, freeDistanceM: e.target.value })
+                        if (configErrors.freeDistanceM) setConfigErrors({ ...configErrors, freeDistanceM: null })
+                      }}
                       className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-orange-500"
                     />
                   </div>
@@ -1288,11 +1415,23 @@ export default function AdminPanel() {
                     </label>
                     <input
                       type="number"
-                      required
                       value={pricingConfig.urgencyFee}
-                      onChange={(e) => setPricingConfig({ ...pricingConfig, urgencyFee: e.target.value })}
-                      className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-orange-500"
+                      onChange={(e) => {
+                        setPricingConfig({ ...pricingConfig, urgencyFee: e.target.value })
+                        if (configErrors.urgencyFee) setConfigErrors({ ...configErrors, urgencyFee: null })
+                      }}
+                      className={`w-full rounded-2xl border px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none transition-colors ${
+                        configErrors.urgencyFee
+                          ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
+                          : 'border-slate-200 focus:border-orange-500'
+                      }`}
                     />
+                    {configErrors.urgencyFee && (
+                      <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                        {configErrors.urgencyFee}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -1302,11 +1441,23 @@ export default function AdminPanel() {
                     <input
                       type="number"
                       step="0.05"
-                      required
                       value={pricingConfig.nightMultiplier}
-                      onChange={(e) => setPricingConfig({ ...pricingConfig, nightMultiplier: e.target.value })}
-                      className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-orange-500"
+                      onChange={(e) => {
+                        setPricingConfig({ ...pricingConfig, nightMultiplier: e.target.value })
+                        if (configErrors.nightMultiplier) setConfigErrors({ ...configErrors, nightMultiplier: null })
+                      }}
+                      className={`w-full rounded-2xl border px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none transition-colors ${
+                        configErrors.nightMultiplier
+                          ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
+                          : 'border-slate-200 focus:border-orange-500'
+                      }`}
                     />
+                    {configErrors.nightMultiplier && (
+                      <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                        {configErrors.nightMultiplier}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -1317,11 +1468,23 @@ export default function AdminPanel() {
                       type="number"
                       min="0"
                       max="23"
-                      required
                       value={pricingConfig.nightStartHour}
-                      onChange={(e) => setPricingConfig({ ...pricingConfig, nightStartHour: e.target.value })}
-                      className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-orange-500"
+                      onChange={(e) => {
+                        setPricingConfig({ ...pricingConfig, nightStartHour: e.target.value })
+                        if (configErrors.nightStartHour) setConfigErrors({ ...configErrors, nightStartHour: null })
+                      }}
+                      className={`w-full rounded-2xl border px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none transition-colors ${
+                        configErrors.nightStartHour
+                          ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
+                          : 'border-slate-200 focus:border-orange-500'
+                      }`}
                     />
+                    {configErrors.nightStartHour && (
+                      <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                        {configErrors.nightStartHour}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -1331,11 +1494,23 @@ export default function AdminPanel() {
                     <input
                       type="number"
                       step="0.01"
-                      required
                       value={pricingConfig.estimateSpreadPct}
-                      onChange={(e) => setPricingConfig({ ...pricingConfig, estimateSpreadPct: e.target.value })}
-                      className="w-full rounded-2xl border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-orange-500"
+                      onChange={(e) => {
+                        setPricingConfig({ ...pricingConfig, estimateSpreadPct: e.target.value })
+                        if (configErrors.estimateSpreadPct) setConfigErrors({ ...configErrors, estimateSpreadPct: null })
+                      }}
+                      className={`w-full rounded-2xl border px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none transition-colors ${
+                        configErrors.estimateSpreadPct
+                          ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
+                          : 'border-slate-200 focus:border-orange-500'
+                      }`}
                     />
+                    {configErrors.estimateSpreadPct && (
+                      <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                        {configErrors.estimateSpreadPct}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -1372,33 +1547,57 @@ export default function AdminPanel() {
               </button>
             </div>
 
-            <form onSubmit={handleCategorySubmit} className="space-y-4">
+            <form onSubmit={handleCategorySubmit} noValidate className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  Category Name
+                  Category Name *
                 </label>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. Appliance Repair"
                   value={categoryForm.name}
-                  onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-orange-500"
+                  onChange={(e) => {
+                    setCategoryForm({ ...categoryForm, name: e.target.value })
+                    if (categoryErrors.name) setCategoryErrors({ ...categoryErrors, name: null })
+                  }}
+                  className={`w-full rounded-xl border px-3.5 py-2 text-xs text-slate-800 focus:outline-none transition-colors ${
+                    categoryErrors.name
+                      ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
+                      : 'border-slate-200 focus:border-orange-500'
+                  }`}
                 />
+                {categoryErrors.name && (
+                  <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                    {categoryErrors.name}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  Category Icon (Emoji)
+                  Category Icon (Emoji) *
                 </label>
                 <input
                   type="text"
-                  required
                   placeholder="🛠️"
                   value={categoryForm.icon}
-                  onChange={(e) => setCategoryForm({ ...categoryForm, icon: e.target.value })}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-800 focus:outline-none focus:border-orange-500"
+                  onChange={(e) => {
+                    setCategoryForm({ ...categoryForm, icon: e.target.value })
+                    if (categoryErrors.icon) setCategoryErrors({ ...categoryErrors, icon: null })
+                  }}
+                  className={`w-full rounded-xl border px-3.5 py-2 text-sm text-slate-800 focus:outline-none transition-colors ${
+                    categoryErrors.icon
+                      ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500'
+                      : 'border-slate-200 focus:border-orange-500'
+                  }`}
                 />
+                {categoryErrors.icon && (
+                  <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                    {categoryErrors.icon}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -1451,7 +1650,7 @@ export default function AdminPanel() {
               </button>
             </div>
 
-            <form onSubmit={handleWorkerSubmit} className="space-y-4">
+            <form onSubmit={handleWorkerSubmit} noValidate className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
@@ -1459,12 +1658,24 @@ export default function AdminPanel() {
                   </label>
                   <input
                     type="text"
-                    required
                     value={workerForm.name}
-                    onChange={(e) => setWorkerForm({ ...workerForm, name: e.target.value })}
+                    onChange={(e) => {
+                      setWorkerForm({ ...workerForm, name: e.target.value })
+                      if (workerErrors.name) setWorkerErrors({ ...workerErrors, name: null })
+                    }}
                     placeholder="e.g. Ramesh Patil"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-orange-500"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none transition-colors ${
+                      workerErrors.name
+                        ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                        : 'border-slate-200 focus:border-orange-500'
+                    }`}
                   />
+                  {workerErrors.name && (
+                    <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {workerErrors.name}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1473,13 +1684,25 @@ export default function AdminPanel() {
                   </label>
                   <input
                     type="tel"
-                    required
                     maxLength={10}
                     value={workerForm.phone}
-                    onChange={(e) => setWorkerForm({ ...workerForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                    onChange={(e) => {
+                      setWorkerForm({ ...workerForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
+                      if (workerErrors.phone) setWorkerErrors({ ...workerErrors, phone: null })
+                    }}
                     placeholder="9820098200"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-mono font-semibold text-slate-800 focus:outline-none focus:border-orange-500"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono font-semibold text-slate-800 focus:outline-none transition-colors ${
+                      workerErrors.phone
+                        ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                        : 'border-slate-200 focus:border-orange-500'
+                    }`}
                   />
+                  {workerErrors.phone && (
+                    <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {workerErrors.phone}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1491,10 +1714,23 @@ export default function AdminPanel() {
                   <input
                     type="email"
                     value={workerForm.email}
-                    onChange={(e) => setWorkerForm({ ...workerForm, email: e.target.value })}
+                    onChange={(e) => {
+                      setWorkerForm({ ...workerForm, email: e.target.value })
+                      if (workerErrors.email) setWorkerErrors({ ...workerErrors, email: null })
+                    }}
                     placeholder="ramesh@worker.in"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-orange-500"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs text-slate-800 focus:outline-none transition-colors ${
+                      workerErrors.email
+                        ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                        : 'border-slate-200 focus:border-orange-500'
+                    }`}
                   />
+                  {workerErrors.email && (
+                    <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {workerErrors.email}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1503,12 +1739,24 @@ export default function AdminPanel() {
                   </label>
                   <input
                     type="password"
-                    required={workerModal.mode === 'create'}
                     value={workerForm.password}
-                    onChange={(e) => setWorkerForm({ ...workerForm, password: e.target.value })}
+                    onChange={(e) => {
+                      setWorkerForm({ ...workerForm, password: e.target.value })
+                      if (workerErrors.password) setWorkerErrors({ ...workerErrors, password: null })
+                    }}
                     placeholder={workerModal.mode === 'create' ? 'Worker@123' : '••••••••'}
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-orange-500"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs text-slate-800 focus:outline-none transition-colors ${
+                      workerErrors.password
+                        ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                        : 'border-slate-200 focus:border-orange-500'
+                    }`}
                   />
+                  {workerErrors.password && (
+                    <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {workerErrors.password}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1598,12 +1846,24 @@ export default function AdminPanel() {
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">City *</label>
                   <input
                     type="text"
-                    required
                     value={workerForm.city}
-                    onChange={(e) => setWorkerForm({ ...workerForm, city: e.target.value })}
+                    onChange={(e) => {
+                      setWorkerForm({ ...workerForm, city: e.target.value })
+                      if (workerErrors.city) setWorkerErrors({ ...workerErrors, city: null })
+                    }}
                     placeholder="Pune"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-orange-500"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs text-slate-800 focus:outline-none transition-colors ${
+                      workerErrors.city
+                        ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                        : 'border-slate-200 focus:border-orange-500'
+                    }`}
                   />
+                  {workerErrors.city && (
+                    <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {workerErrors.city}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Area / Locality</label>
@@ -1708,19 +1968,31 @@ export default function AdminPanel() {
               </button>
             </div>
 
-            <form onSubmit={handleCustomerSubmit} className="space-y-4">
+            <form onSubmit={handleCustomerSubmit} noValidate className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                   Full Name *
                 </label>
                 <input
                   type="text"
-                  required
                   value={customerForm.name}
-                  onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                  onChange={(e) => {
+                    setCustomerForm({ ...customerForm, name: e.target.value })
+                    if (customerErrors.name) setCustomerErrors({ ...customerErrors, name: null })
+                  }}
                   placeholder="e.g. Priya Mehta"
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-orange-500"
+                  className={`w-full rounded-xl border px-3.5 py-2 text-xs font-semibold text-slate-800 focus:outline-none transition-colors ${
+                    customerErrors.name
+                      ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                      : 'border-slate-200 focus:border-orange-500'
+                  }`}
                 />
+                {customerErrors.name && (
+                  <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                    {customerErrors.name}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1730,13 +2002,25 @@ export default function AdminPanel() {
                   </label>
                   <input
                     type="tel"
-                    required
                     maxLength={10}
                     value={customerForm.phone}
-                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                    onChange={(e) => {
+                      setCustomerForm({ ...customerForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })
+                      if (customerErrors.phone) setCustomerErrors({ ...customerErrors, phone: null })
+                    }}
                     placeholder="9819998199"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-mono font-semibold text-slate-800 focus:outline-none focus:border-orange-500"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono font-semibold text-slate-800 focus:outline-none transition-colors ${
+                      customerErrors.phone
+                        ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                        : 'border-slate-200 focus:border-orange-500'
+                    }`}
                   />
+                  {customerErrors.phone && (
+                    <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {customerErrors.phone}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1746,10 +2030,23 @@ export default function AdminPanel() {
                   <input
                     type="email"
                     value={customerForm.email}
-                    onChange={(e) => setCustomerForm({ ...customerForm, email: e.target.value })}
+                    onChange={(e) => {
+                      setCustomerForm({ ...customerForm, email: e.target.value })
+                      if (customerErrors.email) setCustomerErrors({ ...customerErrors, email: null })
+                    }}
                     placeholder="priya@fixmate.in"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-orange-500"
+                    className={`w-full rounded-xl border px-3.5 py-2 text-xs text-slate-800 focus:outline-none transition-colors ${
+                      customerErrors.email
+                        ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                        : 'border-slate-200 focus:border-orange-500'
+                    }`}
                   />
+                  {customerErrors.email && (
+                    <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      {customerErrors.email}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1759,12 +2056,24 @@ export default function AdminPanel() {
                 </label>
                 <input
                   type="password"
-                  required={customerModal.mode === 'create'}
                   value={customerForm.password}
-                  onChange={(e) => setCustomerForm({ ...customerForm, password: e.target.value })}
+                  onChange={(e) => {
+                    setCustomerForm({ ...customerForm, password: e.target.value })
+                    if (customerErrors.password) setCustomerErrors({ ...customerErrors, password: null })
+                  }}
                   placeholder={customerModal.mode === 'create' ? 'Customer@123' : '••••••••'}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:border-orange-500"
+                  className={`w-full rounded-xl border px-3.5 py-2 text-xs text-slate-800 focus:outline-none transition-colors ${
+                    customerErrors.password
+                      ? 'border-rose-400 bg-rose-50/20 focus:border-rose-500 ring-1 ring-rose-400/20'
+                      : 'border-slate-200 focus:border-orange-500'
+                  }`}
                 />
+                {customerErrors.password && (
+                  <p className="mt-1 text-[11px] font-bold text-rose-500 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                    {customerErrors.password}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3 pt-1 border-t border-slate-100">

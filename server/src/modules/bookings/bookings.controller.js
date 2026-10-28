@@ -40,6 +40,7 @@ export const setFinalPrice = asyncHandler(async (req, res) => {
 })
 
 export const confirmFinalPrice = asyncHandler(async (req, res) => {
-  const booking = await bookingsService.confirmFinalPrice(req.params.id, req.user)
+  const paymentMethod = req.body?.paymentMethod === 'CASH' ? 'CASH' : 'UPI'
+  const booking = await bookingsService.confirmFinalPrice(req.params.id, req.user, paymentMethod)
   res.json({ success: true, data: booking })
 })
